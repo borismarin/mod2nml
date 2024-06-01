@@ -32,8 +32,10 @@ def test_compile_snippet():
 
 def test_compile_file():
     target = open('./sample_mods/k_hh.nml').read()
-    compiled = m2n.compile_mod("sample_mods/k_hh.mod")
-    print(compiled)
+    nmldoc = str(m2n.compile_mod("sample_mods/k_hh.mod"))
+    compiled = nmldoc.replace('NeuroMLDocument', 'neuroml') #TODO: how ugly...
 
+    print(compiled)
+    print(target)
     from .xmlcomp import xml_compare
-    #assert xml_compare(target, compiled)
+    assert xml_compare(target, compiled)

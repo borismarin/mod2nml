@@ -167,7 +167,7 @@ def pprint(x):
             ret = f'{float(x):g}'
     return ret
 
-std2nml_rates = {Exponential: 'HHExpRate', ExpLinear: 'HHExpLinear', Sigmoidal:'HHSigmoidRate'}
+std2nml_rates = {Exponential: 'HHExpRate', ExpLinear: 'HHExpLinearRate', Sigmoidal:'HHSigmoidRate'}
 def std_rates(expression):
     try:
         expr, symbol = expression
