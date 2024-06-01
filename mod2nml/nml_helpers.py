@@ -176,9 +176,9 @@ def std_rates(expression):
     match expr:
         case Exponential() | ExpLinear() | Sigmoidal():
             return neuroml.HHRate(type=std2nml_rates[type(expr)],
-                                  rate=f'{pprint(expr.rate)}',
-                                  midpoint=f'{pprint(expr.midpoint)}',
-                                  scale=f'{pprint(expr.scale)}')
+                                  rate=f'{pprint(expr.rate)}per_ms',
+                                  midpoint=f'{pprint(expr.midpoint)}mV',
+                                  scale=f'{pprint(expr.scale)}mV')
         case _:
             return neuroml.HHRate(type='Rate does not match standard form!')
 
