@@ -189,7 +189,6 @@ def generate_neuroml(ast):
 
     suff = get_suffix(ast)
     print("# Processing file defining suffix", suff)
-    nmldoc.id = suff
 
     chans = analyse_currents(ast)
     nmldoc.ion_channel_hhs.extend(chans)
