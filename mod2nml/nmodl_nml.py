@@ -6,6 +6,7 @@ from nmodl import ast, visitor, symtab
 from . import symbolic as sym
 from . import nml_helpers as nml
 from .rename_visitor import RenameReusedVisitor
+from .remove_tables_visitor import RemoveTablesVisitor
 
 import neuroml
 
@@ -127,6 +128,8 @@ def get_gate_dynamics(modast):
 def rename_reused_vars(blk):
     blk.accept(RenameReusedVisitor())
 
+def remove_tables(blk):
+    blk.accept(RemoveTablesVisitor())
 
 def simplify_derivatives(exprs, states):
     res = {}
@@ -137,7 +140,6 @@ def simplify_derivatives(exprs, states):
             print("Couldn't find dynamics for variable", s)
             return None
         ctxt = {s:sym.sp.Symbol(s, real=True) for s in locvars}
-        #ctxt = {'v':sym.sp.Symbol('v', real=True), s:sym.sp.Symbol(s, real=True)} #test
         nml.replace_reused_symbols(exprseq, ctxt)
         replaced, replacements = nml.replace_standards_in_sequence(exprseq, ctxt)
         res[s] = nml.match_dynamics(replaced, ctxt[s], replacements)
@@ -198,5 +200,7 @@ def generate_neuroml(ast):
 def compile_mod(modfile):
     print("# Processing", modfile)
     ast = parse_mod(open(modfile).read())
+    remove_tables(ast)
+    print(nmodl.to_nmodl(ast))
     ast_inline_fold(ast)
     return generate_neuroml(ast)
