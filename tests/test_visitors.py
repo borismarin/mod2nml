@@ -41,8 +41,16 @@ def test_remove_unsopported():
     driver = nmodl.NmodlDriver()
     modast = driver.parse_string(mod)
 
+    procstmts = modast.blocks[0].statement_block.statements
+    print(type(procstmts[0]), f'"{procstmts[0]}"')
+    assert procstmts[0].is_table_statement
+
     tables_visitor = RemoveTablesVisitor()
     modast.accept(tables_visitor)
 
-    print(nmodl.to_nmodl(modast))
+    procstmts = modast.blocks[0].statement_block.statements
+    print(type(procstmts[0]), f'"{procstmts[0]}"')
+    assert procstmts[0].is_line_comment
+
+    #print(nmodl.to_nmodl(modast))
 
