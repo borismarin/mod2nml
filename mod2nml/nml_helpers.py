@@ -159,7 +159,8 @@ def match_standard_rates(expr, subs={}):
     return m
 
 def pprint(x):
-    ret = x
+    if x.is_Rational:
+        x = sp.N(x)
     if x.is_Float:
         if x == int(x):
             ret = sp.Integer(x)
@@ -212,7 +213,7 @@ def replace_standards_in_sequence(seq, ctxt):
     replacements = {}
     syms = sp.numbered_symbols("std",real=True)
     for name, expr in seq:
-        syex = sp.S(expr, ctxt)
+        syex = sp.S(expr, ctxt, rational=True)
         if m := match_standard_rates(syex):
             syex = next(syms)
             replacements[name] = (m, syex)
