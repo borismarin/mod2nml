@@ -34,8 +34,10 @@ def test_match_standard_rates():
         ".125*exp(-(v+65)/80)",
         "1 / ( 1 + exp( ( - v - 48 ) / 10 ) )",
         "-.01*(v+55)/(exp(-(v+55)/10)-1)",
+		"1/(1+exp(((v -(18.700))/(-9.700))))",
+		"0.2*20.000/(1+exp(((v -(-46.560))/(-44.140))))"
     ]:
-        expr = sp.parse_expr(ex, local_dict={"v": nml.v})
+        expr = sp.S(ex, locals={"v": nml.v}, rational=True)
         matched = nml.match_standard_rates(expr).as_symbolic()
         assert sp.simplify(expr / matched) == 1
 
