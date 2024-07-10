@@ -229,7 +229,7 @@ def match_hh_rates(conductance, gates_exponents, dynamics, q10s, nml_chan):
         n_particles = ge.exp if isinstance(ge, sp.Pow) else 1
 
         if q10s[varname]:
-            exptemp = f"{q10s[varname][1]['exp_temp']:.3g}degC"
+            exptemp = f"{pprint(q10s[varname][1]['exp_temp'])}degC"
             q10 = q10s[varname][1]['q10']
             q10el = neuroml.Q10Settings(experimental_temp=exptemp, q10_factor=q10)
 
