@@ -131,7 +131,7 @@ def rename_reused_vars(blk):
 def remove_tables(blk):
     blk.accept(RemoveTablesVisitor())
 
-def simplify_derivatives(exprs, states):
+def simplify_derivatives(exprs, states, temp_corrections={}):
     res = {}
     for s in states:
         try:
@@ -139,10 +139,14 @@ def simplify_derivatives(exprs, states):
         except KeyError:
             print("Couldn't find dynamics for variable", s)
             return None
-        ctxt = {s:sym.sp.Symbol(s, real=True) for s in locvars}
+        ctxt = {v:sym.sp.Symbol(v, real=True) for v in locvars}
+        if temp_corrections[s]:
+            ctxt[temp_corrections[s][0]] = 1
         nml.replace_reused_symbols(exprseq, ctxt)
         replaced, replacements = nml.replace_standards_in_sequence(exprseq, ctxt)
         res[s] = nml.match_dynamics(replaced, ctxt[s], replacements)
+        # TODO: check if temp corrections apply to taus!
+        # TODO: see eg na_mainen.mod for conductance q10 scaling
     return res
 
 
@@ -153,12 +157,31 @@ def conductance(current, ctxt):
     return g
 
 
+def temperature_dependence(dynamics):
+    q10s = {}
+    celsius = sym.sp.Symbol('celsius', real=True)
+    for state, ctxt in dynamics.items():
+        q10s[state] = None
+        locvars, eqs = ctxt
+        ctxt = {s:sym.sp.Symbol(s, real=True) for s in locvars}
 
-def match_hh_gating(g, states):
-    gbar_n_gates = match_cond_states(g, states)
-    #print(f'\tmatching conductances to product of powers of states', end=': ')
-    #print(gbar_n_gates)
-    return gbar_n_gates
+        for var, eq in eqs:
+            expr = sym.sp.S(eq, ctxt, evaluate=False)
+
+            if q10s[state] and sym.sp.Symbol(q10s[state][0], real=True) in expr.free_symbols:
+                # we need that to ensure correction is used in tau, tbd later
+                #print('q10 expression', q10s[state][0], 'used in equation', expr)
+                q10s[state][2].append(var)
+
+            if  m := sym.match_q10(eq, ctxt):
+                #print(var, 'matches q10 correction:', eq)
+                q10s[state] = (var, m, [])
+                ctxt[var] = sym.sp.Symbol(var, real=True)  # do not replace with eq!
+            else:
+                ctxt[var] = expr  # replace var with eq
+
+    return q10s
+
 
 def analyse_currents(ast):
     channs = []
@@ -174,15 +197,20 @@ def analyse_currents(ast):
         states = get_state_vars(ast)
         #print('\tfound state variables', states)
 
-        gbar_n_gates = match_hh_gating(g, states)
+        gbar_n_gates = match_cond_states(g, states)
+        #print(f'\tmatching conductances to product of powers of states', end=': ')
+        #print(gbar_n_gates)
 
         dxs = get_gate_dynamics(ast)
-        simp_dxs = simplify_derivatives(dxs,states)
+
+        q10s = temperature_dependence(dxs)
+
+        simp_dxs = simplify_derivatives(dxs, states, q10s)
         #print(f'\tmatching dynamics to known forms')
         #print(simp_dxs)
 
         # TODO: ugly function with side effect
-        nml.match_hh_rates(g, gbar_n_gates, simp_dxs, nml_chan)
+        nml.match_hh_rates(g, gbar_n_gates, simp_dxs, q10s, nml_chan)
         channs.append(nml_chan)
     return channs
 

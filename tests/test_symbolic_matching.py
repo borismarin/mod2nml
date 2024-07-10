@@ -80,8 +80,8 @@ def test_match_multiexpr_odes():
     assert type(replacements["alphan"][0]) == nml.ExpLinear
 
 def test_q10():
-    tadj = sym.match_q10('3^((celsius - 6.3)/10)')
-    assert tadj[sp.Wild('q10')] == 3
-    assert tadj[sp.Wild('temp')] == sp.S('celsius')
-    assert tadj[sp.Wild('exptemp')] == 6.3
+    tadj = sym.match_q10('3^((celsius - 6.3)/10)', {})
+    assert tadj['q10'] == 3
+    assert tadj['temp'] == sp.S('celsius')
+    assert tadj['exp_temp'] == 6.3
 

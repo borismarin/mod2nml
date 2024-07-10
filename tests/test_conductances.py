@@ -138,3 +138,12 @@ def test_multiple_conds():
     m2n.ast_inline_fold(ast)
     for c in m2n.analyse_currents(ast):
         print(c)
+
+def test_q10():
+    with open("./sample_mods/k_hh_q10.mod") as f:
+        mod = f.read()
+    ast = m2n.parse_mod(mod)
+    m2n.ast_inline_fold(ast)
+    for c in m2n.analyse_currents(ast):
+        print(c)
+

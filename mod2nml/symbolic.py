@@ -55,9 +55,15 @@ def match_alpha_beta_tau_inf(expr, statevar):
 
     return eqs
 
-def match_q10(expr):
-    q10 = sp.Wild("q10")
-    temp = sp.Wild("temp")
-    exptemp = sp.Wild("exptemp")
-    return sp.S(expr).match(q10 ** ((temp - exptemp)/10))
+def match_q10(expr, ctxt):
+    q10 = sp.Wild("q10", exclude=[0])
+    temp = sp.Wild("celsius", exclude=[0])
+    exptemp = sp.Wild("exptemp", exclude=[0])
+    m = sp.S(expr, ctxt).match(q10 ** ((temp - exptemp)/10))
+    ret = {}
+    if m:
+       ret['q10'] = m[q10]
+       ret['temp'] = m[temp]
+       ret['exp_temp'] = m[exptemp]
+    return ret
 

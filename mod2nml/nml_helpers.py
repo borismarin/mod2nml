@@ -194,6 +194,7 @@ def replace_reused_symbols(seq, ctxt):
         ctxt[name] = syex
     return ctxt, replaced
 
+
 def replace_standards_in_sequence(seq, ctxt):
     def absorb_scalar(name, expr): # TODO: factor out
         stds_to_reps = {v[1]:v[0] for v in replacements.values()}
@@ -220,21 +221,31 @@ def replace_standards_in_sequence(seq, ctxt):
     return ctxt, replacements
 
 
-def match_hh_rates(conductance, gates_exponents, dynamics, nml_chan):
+def match_hh_rates(conductance, gates_exponents, dynamics, q10s, nml_chan):
     for gating_var in (m for m in gates_exponents if m != 'gbar'):
+        varname = gating_var.name
         ge = gates_exponents[gating_var]
         n_particles = ge.exp if isinstance(ge, sp.Pow) else 1
 
-        match dyn:= dynamics[gating_var.name]:
+        if q10s[varname]:
+            exptemp = f"{q10s[varname][1]['exp_temp']:.3g}degC"
+            q10 = q10s[varname][1]['q10']
+            q10el = neuroml.Q10Settings(experimental_temp=exptemp, q10_factor=q10)
+
+        match dyn:= dynamics[varname]:
             case GateHHrates():
-                gate = neuroml.GateHHRates(id=gating_var.name, instances=n_particles)
+                gate = neuroml.GateHHRates(id=varname, instances=n_particles)
                 gate.forward_rate = std_rates(dyn.forward)
                 gate.reverse_rate = std_rates(dyn.reverse)
+                if q10s[varname]:
+                    gate.q10_settings = q10el
                 nml_chan.gate_hh_rates.append(gate)
             case GateHHtauInf():
-                gate = neuroml.GateHHTauInf(id=gating_var.name, instances=n_particles)
+                gate = neuroml.GateHHTauInf(id=varname, instances=n_particles)
                 gate.steady_state = std_rates(dyn.steady_state)
                 gate.time_course = std_rates(dyn.time_course)
+                if q10s[varname]:
+                    gate.q10_settings = q10el
                 nml_chan.gate_hh_tau_infs.append(gate)
             case _:
                 gate = neuroml.Gate(id='Could not match gate dynamics to known forms!!')
